@@ -1,7 +1,6 @@
 """A python server created using socket."""
+#Imports
 import socket
-import http.server
-
 
 
 class Webserver:
@@ -43,7 +42,6 @@ class Webserver:
             bytechunk = comm_socket.recv(4096)
             bytebuffer += bytechunk
             if bytechunk == b"":
-                print("===> Client Disconnected...")
                 comm_socket.close()
                 return
         bytedata = bytebuffer
@@ -72,19 +70,24 @@ class Webserver:
             header_text += f"{key}:{value}\r\n"
         header_text += "\r\n"
 
+        #Sending response.
         comm_socket.sendall(header_text.encode("iso-8859-1"))
         comm_socket.sendall(body)
         print(f"===> Server responded to client...")
-  
-        
+
+    def close_server(self):
+        self.server_socket.close()
+        print("===> Server shutting down...")
+       
+
 
 class HTTPResponse:
     """ Handles creating the http response headers.
     """
 
-    def __init__(self):
+    def __init__(self, status=200):
 
-        self.status = 200
+        self.status = status
 
     def http_response(self, http_ver, body, content_type):
         """ http_response(http_ver, endpoint, content, content_type) -> status_line, header (dict)
@@ -101,7 +104,7 @@ class HTTPResponse:
         headers["Content-Length"] = str(len(body))
         headers["Connection"] = "close"
         return status_line, headers        
-        
+       
 
 
 class Router:
@@ -125,25 +128,8 @@ class Router:
         with open ("index.html", "rb") as index:
             body = index.read()
         return body, content_type
-        
 
-
-
+       
+#Testing
 if __name__ == "__main__":
-
-    router = Router()
-    server = Webserver()
-    httpresponse = HTTPResponse()
-
-    server_socket = server.init_server_socket()
-    print(f"===> Server socket initialized at host {server.HOST_IP}:{server.PORT}...")
-    print(f"===> Server now running at {server.HOST_IP}:{server.PORT}...")
-    #everything in this block will be reiterated when a new client connects
-    while True:
-        comm_socket, clientaddr = server.accept_client(server_socket)
-        print(f"===> Connected to client at {clientaddr}...")
-        headers, method, root_path, http_ver = server.handle_client(comm_socket)
-        handler = router.find_route(method, root_path)
-        body, content_type = handler()
-        status_line, headers = httpresponse.http_response(http_ver, body, content_type)
-        server.response(status_line, headers, body, comm_socket)
+    pass 
